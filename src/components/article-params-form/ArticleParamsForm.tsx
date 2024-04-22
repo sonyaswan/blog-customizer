@@ -1,4 +1,4 @@
-import { useState, SyntheticEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 
 import { ArrowButton } from '../arrow-button';
 import { Button } from '../button';
@@ -31,12 +31,26 @@ export const ArticleParamsForm = ({
 	articleParams,
 	setArticleParams,
 }: ArticleParamsFormProps) => {
-	const [viewState, setViewState] = useState(false);
+	const [isFormOpen, setFormOpen] = useState(true);
 	const [formState, setFormState] = useState(articleParams);
 
-	function openForm() {
-		setViewState(!viewState);
-	}
+	useEffect(() => {
+		const closeByClick = (event: MouseEvent) => {
+			if (event.type === 'click' && event.x > 616) setFormOpen(false);
+		};
+
+		const closeByEscape = (event: KeyboardEvent) => {
+			event.key == 'Escape' && setFormOpen(false);
+		};
+
+		document.addEventListener('click', closeByClick);
+		document.addEventListener('keydown', closeByEscape);
+
+		return () => {
+			document.removeEventListener('click', closeByClick);
+			document.removeEventListener('keydown', closeByEscape);
+		};
+	}, [isFormOpen]);
 
 	function handleParam(value: OptionType, option: keyof ArticleStateType) {
 		setFormState((prevState) => ({
@@ -50,19 +64,19 @@ export const ArticleParamsForm = ({
 		setArticleParams(defaultArticleState);
 	}
 
-	function handleSubmit(event: SyntheticEvent) {
+	function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		setArticleParams(formState);
 	}
 
 	return (
 		<>
-			<ArrowButton state={viewState} action={openForm} />
+			<ArrowButton state={isFormOpen} action={() => setFormOpen(!isFormOpen)} />
 			<aside
 				className={clsx(styles.container, {
-					[styles.container_open]: viewState,
+					[styles.container_open]: isFormOpen,
 				})}>
-				<form className={styles.form}>
+				<form className={styles.form} onSubmit={handleSubmit}>
 					<Text
 						as='h2'
 						size={31}
@@ -70,8 +84,7 @@ export const ArticleParamsForm = ({
 						fontStyle='normal'
 						uppercase
 						align='left'
-						family='open-sans'
-						dynamicLite>
+						family='open-sans'>
 						Задайте параметры
 					</Text>
 
@@ -115,7 +128,7 @@ export const ArticleParamsForm = ({
 
 					<div className={styles.bottomContainer}>
 						<Button title='Сбросить' type='reset' onClick={handleReset} />
-						<Button title='Применить' type='submit' onClick={handleSubmit} />
+						<Button title='Применить' type='submit' />
 					</div>
 				</form>
 			</aside>
