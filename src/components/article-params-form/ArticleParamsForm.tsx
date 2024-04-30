@@ -1,4 +1,4 @@
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useRef } from 'react';
 
 import { ArrowButton } from '../arrow-button';
 import { Button } from '../button';
@@ -6,6 +6,7 @@ import { Text } from '../text';
 import { Select } from '../select';
 import { RadioGroup } from '../radio-group';
 import { Separator } from '../separator';
+import { useOutsideCloseForm } from './hooks/useOutsideCloseForm';
 
 import clsx from 'clsx';
 
@@ -31,26 +32,16 @@ export const ArticleParamsForm = ({
 	articleParams,
 	setArticleParams,
 }: ArticleParamsFormProps) => {
-	const [isFormOpen, setFormOpen] = useState(true);
+	const [isFormOpen, setFormOpen] = useState<boolean>(false);
 	const [formState, setFormState] = useState(articleParams);
 
-	useEffect(() => {
-		const closeByClick = (event: MouseEvent) => {
-			if (event.type === 'click' && event.x > 616) setFormOpen(false);
-		};
+	const rootRef = useRef<HTMLDivElement>(null);
 
-		const closeByEscape = (event: KeyboardEvent) => {
-			event.key == 'Escape' && setFormOpen(false);
-		};
-
-		document.addEventListener('click', closeByClick);
-		document.addEventListener('keydown', closeByEscape);
-
-		return () => {
-			document.removeEventListener('click', closeByClick);
-			document.removeEventListener('keydown', closeByEscape);
-		};
-	}, [isFormOpen]);
+	useOutsideCloseForm({
+		isFormOpen,
+		rootRef,
+		onClose: () => setFormOpen(false),
+	});
 
 	function handleParam(value: OptionType, option: keyof ArticleStateType) {
 		setFormState((prevState) => ({
@@ -70,7 +61,7 @@ export const ArticleParamsForm = ({
 	}
 
 	return (
-		<>
+		<div ref={rootRef}>
 			<ArrowButton state={isFormOpen} action={() => setFormOpen(!isFormOpen)} />
 			<aside
 				className={clsx(styles.container, {
@@ -132,6 +123,6 @@ export const ArticleParamsForm = ({
 					</div>
 				</form>
 			</aside>
-		</>
+		</div>
 	);
 };
